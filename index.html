@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Nearest Park Score Reclass Viewer</title>
+
+  <!-- CSS LIBRARIES -->
+  <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css'>
+  <link rel='stylesheet' href='https://js.arcgis.com/4.11/esri/themes/dark/main.css'>
+
+  <!-- CUSTOM CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="grey darken-3">
+  <nav class="blue darken-4 z-depth-5">
+    <a href="#" id="navbar-title" class="brand-logo">Nearest Park Score Reclass Viewer</a>
+  </nav>
+  <div class="row flex">
+    <!-- Map Element -->
+    <div class="col s12 m8" id="viewDiv"></div>
+    <!-- Sidebar -->
+    <div class="col s12 m4 grey darken-3" id="info-pane">
+      <!--    FORM: ANALYSIS TYPE   -->
+      <div class="col s12">
+        <div class="col s12">
+          <h3 class="white-text">Analysis Type</h3>
+        </div>
+        <div class="col s12">
+          <div class="col s12 m6">
+            <p>
+              <label for="los">
+                <input type="radio" id="los" name="analysis-type" value="LEVEL_OF_SERVICE" checked>
+                <span class="white-text">Current LOS</span>
+              </label>
+            </p>
+          </div>
+          <div class="col s12 m6">
+            <p>
+              <label for="maxlos">
+                <input type="radio" id="maxlos" name="analysis-type" value="LAND_ACQUISITION">
+                <span class="white-text">LOS at full build-out</span>
+              </label>
+            </p>
+          </div>
+        </div>
+      </div>
+      <!--   FORM: BINNING METHODS   -->
+      <div class="col s12">
+        <div class="col s12">
+          <h3 class="white-text">Binning Method</h3>
+        </div>
+        <div class="col s12">
+          <p>
+            <label>
+              <input name="binning-method" type="radio" id="bm-quantile" value="quantile" checked />
+              <span class="white-text">Current Method - 2018 LOS Quantiles</span>
+            </label>
+          </p>
+          <p>
+            <label>
+              <input name="binning-method" type="radio" id="bm-half-step" value="halfStep" />
+              <span class="white-text">Half-Mile Increments</span>
+            </label>
+          </p>
+          <p>
+            <label>
+              <input name="binning-method" type="radio" id="bm-double-step" value="doubleStep" />
+              <span class="white-text">Double-Step Increments</span>
+            </label>
+          </p>
+          <p>
+            <label>
+              <input name="binning-method" type="radio" id="bm-custom" value="custom" disabled="disabled" />
+              <span>Custom</span>
+            </label>
+          </p>
+        </div>
+      </div>
+      <!--  CHART: COUNT OF CENSUS BLOCKS IN EACH BIN    -->
+      <div class="col s12">
+        <h5 class="white-text">Population</h5>
+        <div class="chart-container">
+          <canvas id="pop-sum-chart"></canvas>
+        </div>
+      </div>
+      <div class="col s12">
+        <h5 class="white-text">Population Share</h5>
+        <div class="chart-container">
+          <canvas id="pop-donut-chart"></canvas>
+        </div>
+      </div>
+      <div class="col s12">
+        <h5 class="white-text">Census Blocks</h5>
+        <div class="chart-container">
+          <canvas id="block-count-chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIBRARIES -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js'></script>
+  <script src='https://js.arcgis.com/4.11/'></script>
+
+  <!-- APP SCRIPT -->
+  <script src="js/index.js"></script>
+</body>
+
+</html>
