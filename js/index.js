@@ -1,165 +1,3 @@
-const mapConfig = {
-  center: [-78.642688, 35.777734],
-  zoom: 12
-};
-
-const colorPalette = ["#eff3ff", "#bdd7e7", "#6baed6", "#3182bd", "#08519c"];
-
-const classBreakSymbols = {
-  a: {
-    type: "simple-fill",
-    color: colorPalette[4],
-    style: "solid",
-    outline: {
-      width: 0
-    }
-  },
-  b: {
-    type: "simple-fill",
-    color: colorPalette[3],
-    style: "solid",
-    outline: {
-      width: 0
-    }
-  },
-  c: {
-    type: "simple-fill",
-    color: colorPalette[2],
-    style: "solid",
-    outline: {
-      width: 0
-    }
-  },
-  d: {
-    type: "simple-fill",
-    color: colorPalette[1],
-    style: "solid",
-    outline: {
-      width: 0
-    }
-  },
-  f: {
-    type: "simple-fill",
-    color: colorPalette[0],
-    style: "solid",
-    outline: {
-      width: 0
-    }
-  }
-};
-
-const classBreakInfos = {
-  quantile: [
-    {
-      minValue: 0,
-      maxValue: 0.34808452120741512,
-      label: "< 0.35",
-      symbol: classBreakSymbols.a
-    },
-    {
-      minValue: 0.34808452120741513,
-      maxValue: 0.69358269292405539,
-      label: "0.35 - 0.69",
-      symbol: classBreakSymbols.b
-    },
-    {
-      minValue: 0.6935826929240554,
-      maxValue: 1.073097773703062,
-      label: "0.70 - 1.07",
-      symbol: classBreakSymbols.c
-    },
-    {
-      minValue: 1.073097773703063,
-      maxValue: 1.5664402798982171,
-      label: "1.07 - 1.56",
-      symbol: classBreakSymbols.d
-    },
-    {
-      minValue: 1.5664402798982172,
-      maxValue: 1000,
-      label: "1.56+",
-      symbol: classBreakSymbols.f
-    }
-  ],
-  halfStep: [
-    {
-      minValue: 0,
-      maxValue: 0.4999,
-      label: "< 0.5",
-      symbol: classBreakSymbols.a
-    },
-    {
-      minValue: 0.5,
-      maxValue: 0.9999,
-      label: "0.5 - 1.0",
-      symbol: classBreakSymbols.b
-    },
-    {
-      minValue: 1.0,
-      maxValue: 1.4999,
-      label: "1.0 - 1.5",
-      symbol: classBreakSymbols.c
-    },
-    {
-      minValue: 1.5,
-      maxValue: 1.9999,
-      label: "1.5 - 2.0",
-      symbol: classBreakSymbols.d
-    },
-    {
-      minValue: 2.0,
-      maxValue: 1000,
-      label: "2.0+",
-      symbol: classBreakSymbols.f
-    }
-  ],
-  doubleStep: [
-    {
-      minValue: 0,
-      maxValue: 0.4999,
-      label: "< 0.5",
-      symbol: classBreakSymbols.a
-    },
-    {
-      minValue: 0.5,
-      maxValue: 0.9999,
-      label: "0.5 - 1.0",
-      symbol: classBreakSymbols.b
-    },
-    {
-      minValue: 1.0,
-      maxValue: 1.9999,
-      label: "1.0 - 2.0",
-      symbol: classBreakSymbols.c
-    },
-    {
-      minValue: 2.0,
-      maxValue: 3.9999,
-      label: "2.0 - 4.0",
-      symbol: classBreakSymbols.d
-    },
-    {
-      minValue: 4.0,
-      maxValue: 1000,
-      label: "4.0+",
-      symbol: classBreakSymbols.f
-    }
-  ]
-};
-
-const layerUrls = {
-  base:
-    "https://jsapi.maps.arcgis.com/sharing/rest/content/items/5e9b3685f4c24d8781073dd928ebda50/resources/styles/root.json",
-  blocks:
-    "https://services.arcgis.com/v400IkDOw1ad7Yad/arcgis/rest/services/EBPA_Demographic_and_Community_Analysis_by_Census_Block/FeatureServer/0",
-  ralParks:
-    "https://services.arcgis.com/v400IkDOw1ad7Yad/arcgis/rest/services/Parks_with_Analysis_Tiers/FeatureServer/0",
-  otherParks:
-    "https://services.arcgis.com/v400IkDOw1ad7Yad/arcgis/rest/services/raleigh_county_state_parks/FeatureServer/1",
-  labels:
-    "https://jsapi.maps.arcgis.com/sharing/rest/content/items/747cb7a5329c478cbe6981076cc879c5/resources/styles/root.json"
-};
-
 let barCountCtx = document.getElementById("block-count-chart").getContext("2d");
 let barCountChart = new Chart(barCountCtx, {
   type: "bar",
@@ -381,9 +219,19 @@ require([
     }
   });
 
-  //--------------------------------
-  // CREATE RENDERER
-  //--------------------------------
+  //---------------------------------
+  // CREATE LAYERS
+  //---------------------------------
+
+  // Basemap
+  //// Vector Tile Layer
+  let baseLayer = new VectorTileLayer({
+    url: layerUrls.base
+  });
+  map.add(baseLayer);
+
+  // Census Blocks
+  //// Renderer
   const blockRenderer = {
     type: "class-breaks",
     field: "los_closest_park_dist",
@@ -400,32 +248,7 @@ require([
     classBreakInfos: classBreakInfos.quantile
   };
 
-  //---------------------------------
-  // ARCADE EXPRESSIONS
-  //---------------------------------
-  let arcadeExpressionInfos = [
-    {
-      name: "los-mileage-arcade",
-      title: "Current Distance to Nearest Park",
-      expression: "Round($feature.los_closest_park_dist, 2) + ' mi'"
-    },
-    {
-      name: "la-mileage-arcade",
-      title: "Distance to Nearest Park at Full System Build-Out",
-      expression: "Round($feature.la_closest_park_dist, 2) + ' mi'"
-    }
-  ];
-
-  //---------------------------------
-  // LOAD LAYER(S)
-  //---------------------------------
-  // Basemap layer
-  let baseLayer = new VectorTileLayer({
-    url: layerUrls.base
-  });
-  map.add(baseLayer);
-
-  // Census Blocks Layer
+  //// Feature Layer
   let blockLayer = new FeatureLayer({
     url: layerUrls.blocks,
     title: "Raleigh ETJ Census Block",
@@ -457,13 +280,16 @@ require([
   });
   map.add(blockLayer);
 
+  //// Post-Initialization Actions
   blockLayer
+    // Zoom to extent of Block Layer
     .when(() => {
       return blockLayer.queryExtent();
     })
     .then(response => {
       view.goTo(response.extent);
     })
+    // Update Charts
     .then(() => {
       let queryUrls = [];
       let starterBins = [
@@ -490,7 +316,8 @@ require([
       });
     });
 
-  // Raleigh Parks Layer
+  // Raleigh Parks
+  //// Feature Layer
   let ralParksLayer = new FeatureLayer({
     url: layerUrls.ralParks,
     outFields: ["PARKID", "NAME", "LEVEL_OF_SERVICE", "LAND_ACQUISITION"],
@@ -512,7 +339,8 @@ require([
   });
   map.add(ralParksLayer);
 
-  // County/State Parks Layer
+  // County/State Parks
+  //// Feature Layer
   let otherParksLayer = new FeatureLayer({
     url: layerUrls.otherParks,
     outFields: ["PARKID", "NAME"],
@@ -533,7 +361,8 @@ require([
   });
   map.add(otherParksLayer);
 
-  // Labels layer
+  // Labels
+  ///// Vector Tile Layer
   let labelsLayer = new VectorTileLayer({
     url: layerUrls.labels
   });
@@ -542,6 +371,8 @@ require([
   //------------------------------
   // ADD LEGEND
   //------------------------------
+
+  // Legend
   const legend = new Legend({
     view: view,
     layerInfos: [
@@ -562,6 +393,7 @@ require([
     });
   });
 
+  // Add Legend to Expand widget
   let legendExpand = new Expand({
     view: view,
     content: legend,
@@ -688,20 +520,23 @@ require([
     return queryObject;
   }
 
-  // FUNCTIONS
-
-  async function queryBlockStatistics(array) {
-    let results = [];
-    for (const item of array) {
-      await $.getJSON(item, data => {
-        results.push(data.features[0].attributes);
-      });
-    }
-    return results;
-  }
-
-  function updateChartValues(chart, valsArray) {
-    chart.data.datasets[0].data = valsArray;
-    chart.update();
-  }
+  
 });
+
+//------------------------
+// FUNCTIONS
+//------------------------
+async function queryBlockStatistics(array) {
+  let results = [];
+  for (const item of array) {
+    await $.getJSON(item, data => {
+      results.push(data.features[0].attributes);
+    });
+  }
+  return results;
+}
+
+function updateChartValues(chart, valsArray) {
+  chart.data.datasets[0].data = valsArray;
+  chart.update();
+}
