@@ -409,12 +409,9 @@ require([
   const analysisTypeOptions = document.getElementsByName("analysis-type");
   const binningOptions = document.getElementsByName("binning-method");
 
-
-  //==============================================
-  // Test out adding event listeners to inputs.
-  // Perhaps this will make responding to changes
-  // a little bit easier
-  //==============================================
+  //================================================
+  // Event listeners and function for inputs change
+  //================================================
 
   for (let i = 0; i < analysisTypeOptions.length; i++) {
     analysisTypeOptions[i].addEventListener('change', () => {
@@ -426,31 +423,17 @@ require([
       // Update Parks Layer
       ralParksLayer.definitionExpression = `${checkedAnalysisTypeData.analysisType}=1`
 
-      
-      let classBreakBins = classBreakInfos[checkedBinningData.binningMethod].map(bin => {
-        return {
-          min: bin.minValue,
-          max: bin.maxValue
-        };
-      });
-
-      console.log(classBreakBins)
-
-      // Get Chart Statistics
+      // Get Chart Statistics Query Strings
       let queryUrlStrings = [];
-      classBreakBins.forEach((bin) => {
+      classBreakInfos[checkedBinningData.binningMethod].forEach((bin) => {
         queryUrlStrings.push(
-          `${layerUrls.blocks}/query?f=json&where=${
-            checkedAnalysisTypeData.analysisField
-          }+between+${bin.min}+and+${
-            bin.max
-          }&returnGeometry=false&outStatistics=[{"statisticType":"count","onStatisticField":"OBJECTID","outStatisticFieldName":"count"},{"statisticType":"sum","onStatisticField":"pop_2018","outStatisticFieldName":"pop"}]`
+          blockStatsQueryString(checkedAnalysisTypeData.analysisField, bin.minValue, bin.maxValue)
         );
       });
 
-      console.log(queryUrlStrings)
-      // Update Charts
+      // Return query results
       queryBlockStatistics(queryUrlStrings).then(results => {
+        // Update charts
         updateChartValues(barCountChart, results.map(x => x.count));
         updateChartValues(barPopChart, results.map(x => x.pop));
         updateChartValues(donutPopChart, results.map(x => x.pop));
@@ -463,77 +446,34 @@ require([
   // CHANGE BINNGING METHOD
   //-----------------------------
   for (let i = 0; i < binningOptions.length; i++) {
-    binningOptions[i].onchange = function() {
-      let selectedClassBreakInfos = classBreakInfos[this.value];
-      blockRenderer.classBreakInfos = selectedClassBreakInfos;
-      blockLayer.renderer = blockRenderer;
+    binningOptions[i].addEventListener('change', () => {
+      // Get the data attributes for the checked value from both input forms
+      let checkedAnalysisTypeData = getCheckedOptionData(analysisTypeOptions)
+      let checkedBinningData = getCheckedOptionData(binningOptions)
+      // Update Blocks Layer
+      updateBlockRenderer(blockLayer, blockRenderer, checkedAnalysisTypeData.analysisField, classBreakInfos[checkedBinningData.binningMethod])
+      // Update Parks Layer
+      ralParksLayer.definitionExpression = `${checkedAnalysisTypeData.analysisType}=1`
 
-      let queryParameterObject = generateSummaryStatQueryParameters(
-        classBreakInfos,
-        "analysis-type",
-        "binning-method"
-      );
-      let queryUrls = [];
-      queryParameterObject.bins.forEach((bin, index) => {
-        queryUrls.push(
-          `${layerUrls.blocks}/query?f=json&where=${
-            blockRenderer.field
-          }+between+${bin.min}+and+${
-            bin.max
-          }&returnGeometry=false&outStatistics=[{"statisticType":"count","onStatisticField":"OBJECTID","outStatisticFieldName":"count"},{"statisticType":"sum","onStatisticField":"pop_2018","outStatisticFieldName":"pop"}]`
+      // Get Chart Statistics Query Strings
+      let queryUrlStrings = [];
+      classBreakInfos[checkedBinningData.binningMethod].forEach((bin) => {
+        queryUrlStrings.push(
+          blockStatsQueryString(checkedAnalysisTypeData.analysisField, bin.minValue, bin.maxValue)
         );
       });
-      queryBlockStatistics(queryUrls).then(results => {
+
+      // Return query results
+      queryBlockStatistics(queryUrlStrings).then(results => {
+        // Update charts
         updateChartValues(barCountChart, results.map(x => x.count));
         updateChartValues(barPopChart, results.map(x => x.pop));
         updateChartValues(donutPopChart, results.map(x => x.pop));
       });
-    };
+    })
   }
 
-  function generateSummaryStatQueryParameters(
-    classBreakInfos,
-    analysisElName,
-    binningElName
-  ) {
-    let analysisInfos, binningInfos;
-    let queryObject = {};
-
-    // Get analysis infos
-    let analysisOptions = document.getElementsByName(analysisElName);
-    for (let i = 0; i < analysisOptions.length; i++) {
-      if (analysisOptions[i].checked) {
-        analysisInfos = analysisOptions[i].value;
-        break;
-      }
-    }
-    if (analysisInfos == "LEVEL_OF_SERVICE") {
-      queryObject.analysis = "los_closest_park_dist";
-    } else if (analysisInfos == "LAND_ACQUISITION") {
-      queryObject.analysis = "la_closest_park_dist";
-    }
-
-    // Get binning infos
-    let binningOptions = document.getElementsByName(binningElName);
-    for (let i = 0; i < binningOptions.length; i++) {
-      if (binningOptions[i].checked) {
-        binningInfos = classBreakInfos[binningOptions[i].value];
-        break;
-      }
-    }
-
-    queryObject.bins = binningInfos.map(bin => {
-      return {
-        min: bin.minValue,
-        max: bin.maxValue
-      };
-    });
-
-    return queryObject;
-  }
-
-  
-});
+})
 
 //------------------------
 // FUNCTIONS
@@ -576,49 +516,4 @@ function updateBlockRenderer(blockLayer, blockRenderer, analysisField, binningMe
   blockLayer.renderer = blockRenderer
 }
 
-
-function createSummaryStatQueryParameters(
-  classBreakInfos,
-  analysisElName,
-  binningElName
-) {
-  let analysisInfos, binningInfos;
-  let queryObject = {};
-
-
-
-
-
-
-  // Get analysis infos
-  let analysisOptions = document.getElementsByName(analysisElName);
-  for (let i = 0; i < analysisOptions.length; i++) {
-    if (analysisOptions[i].checked) {
-      analysisInfos = analysisOptions[i].value;
-      break;
-    }
-  }
-  if (analysisInfos == "LEVEL_OF_SERVICE") {
-    queryObject.analysis = "los_closest_park_dist";
-  } else if (analysisInfos == "LAND_ACQUISITION") {
-    queryObject.analysis = "la_closest_park_dist";
-  }
-
-  // Get binning infos
-  let binningOptions = document.getElementsByName(binningElName);
-  for (let i = 0; i < binningOptions.length; i++) {
-    if (binningOptions[i].checked) {
-      binningInfos = classBreakInfos[binningOptions[i].value];
-      break;
-    }
-  }
-
-  queryObject.bins = binningInfos.map(bin => {
-    return {
-      min: bin.minValue,
-      max: bin.maxValue
-    };
-  });
-
-  return queryObject;
 }
