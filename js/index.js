@@ -515,5 +515,3 @@ function updateBlockRenderer(blockLayer, blockRenderer, analysisField, binningMe
   blockRenderer.classBreakInfos = binningMethod
   blockLayer.renderer = blockRenderer
 }
-
-}
