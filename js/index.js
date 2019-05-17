@@ -515,3 +515,7 @@ function updateBlockRenderer(blockLayer, blockRenderer, analysisField, binningMe
   blockRenderer.classBreakInfos = binningMethod
   blockLayer.renderer = blockRenderer
 }
+
+function blockStatsQueryString(analysisField, min, max, ) {
+  return `https://services.arcgis.com/v400IkDOw1ad7Yad/arcgis/rest/services/EBPA_Demographic_and_Community_Analysis_by_Census_Block/FeatureServer/0/query?f=json&where=${analysisField}+between+${min}+and+${max}&returnGeometry=false&outStatistics=[{"statisticType":"count","onStatisticField":"OBJECTID","outStatisticFieldName":"count"},{"statisticType":"sum","onStatisticField":"pop_2018","outStatisticFieldName":"pop"}]`
+}
